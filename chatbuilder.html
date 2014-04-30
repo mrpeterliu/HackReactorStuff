@@ -39,6 +39,7 @@
       delete Chat.fetch;
       delete Chat.send;
 
+      // Get variables from the URL
       function getUrlVars() {
         var vars = {};
         var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, 
@@ -48,58 +49,58 @@
         return vars;
       }
 
-      $(document).ready(function() {
-        // Display a single message
-        var display = function(message) {
-          $('.messages').append('<li>' + message + '</li>');
-        };
+      // Display a single message
+      function display(message) {
+        $('.messages').append('<li>' + message + '</li>');
+      };
 
-        // Display all of the messages
-        var displayMessages = function(response) {
-          $('.messages li').remove();
-          for (var i = 0; i < response.results.length; i++) {
-            display(response.results[i].text);
+      // Display all of the messages
+      function displayMessages(response) {
+        $('.messages li').remove();
+        for (var i = 0; i < response.results.length; i++) {
+          display(response.results[i].text);
+        }
+      };
+
+      // Get all of the messages from the server, and display the messages
+      function fetch() { 
+        $.ajax({
+          type: 'GET',
+          url: 'https://api.parse.com/1/classes/chats',
+          dataType: 'json',
+          order: 'createdAt',
+          success: function(response) {
+            displayMessages(response);
+          },
+          error: function(error) {
+            console.log(error);
           }
-        };
+        });
+      };
 
-        // Get all of the messages from the server, and display the messages
-        var fetch = function() { 
-          $.ajax({
-            type: 'GET',
-            url: 'https://api.parse.com/1/classes/chats',
-            dataType: 'json',
-            order: 'createdAt',
-            success: function(response) {
-              displayMessages(response);
-            },
-            error: function(error) {
-              console.log(error);
-            }
-          });
-        };
+      // Send a message with username
+      function send(username, message) {
+        $.ajax({
+          type: 'POST',
+          url: 'https://api.parse.com/1/classes/chats',
+          data: JSON.stringify({
+            text: username + ': ' + message
+          }),
+          success: function(response) {
+            fetch();
+          },
+          error: function(error) {
+            console.log(error);
+          }
+        });
+      }
 
+      $(document).ready(function() {
         // Refresh the list of message every 3 seconds
         setInterval(fetch, 3000);
 
         // Set the username
         var username = getUrlVars()['username']; 
-
-        // Send a message with username
-        var send = function(username, message) {
-          $.ajax({
-            type: 'POST',
-            url: 'https://api.parse.com/1/classes/chats',
-            data: JSON.stringify({
-              text: username + ': ' + message
-            }),
-            success: function(response) {
-              fetch();
-            },
-            error: function(error) {
-              console.log(error);
-            }
-          });
-        }
 
         // Send message when submitting form
         $('#messageForm').submit(function(e) {
